@@ -1,3 +1,5 @@
+// imports
+
 import XYZ from 'ol/source/XYZ';
 import TileLayer from 'ol/layer/Tile';
 import {Map, View} from 'ol';
@@ -16,12 +18,19 @@ import io from 'socket.io-client';
 // Setting up socket
 const socket = io('http://127.0.0.1:5000');
 
+
 // Handle connection
 socket.on('connect', () => {
   console.log('Connected to Flask Socket.IO server');
 });
 
-socket.emit('init'); //not doing anything now
+
+// Handle 'initialize' events from Flask
+socket.on('initialize', (baseview) => {
+  console.log('Received Initialize', baseview)
+  initializeMap(baseview);
+});
+
 
 // Handle 'update' events from Flask
 socket.on('update', (data) => {
@@ -29,12 +38,10 @@ socket.on('update', (data) => {
   updateMap(data);
 });
 
-socket.on('Initialize', (baseview) => {
-  console.log('Received', baseview)
-});
 
 
 ////////////////////////////////////////////////////// map
+
 //SETTING UP OUR LAYERS
 //  Base Layer
 var base = new TileLayer({
@@ -43,29 +50,16 @@ var base = new TileLayer({
   ),
 })
 
-//Overlay (CSL Layer)
+//  Overlay (CSL Layer)
 var overlay = new TileLayer({
   source: new XYZ(
     {url:'/tiles/{z}/{x}/{-y}.png'}
   ),
 })
 
-const iconFeature = new Feature({
-  geometry: new Point(fromLonLat([76.2889, 9.9554])),
-  name: 'Null Island',
-});
 
-const iconStyle = new Style({
-  image: new Icon({
-    // anchor: [0.5, 1],
-    // anchorXUnits: 'fraction',
-    // anchorYUnits: 'pixels',
-    src: '/src/bluecam.png',
-    scale: 0.06,
-  }),
-});
-
-iconFeature.setStyle(iconStyle);
+//  Marker Layer
+const iconFeature = new Feature;
 
 let MarkerSource = new VectorSource({
   features: [iconFeature],
@@ -75,14 +69,9 @@ let MarkerLayer = new VectorLayer({
   source: MarkerSource,
 });
 
-//Setting up view (zoom level and coordinates)
-let view = new View({
-  center: fromLonLat([76.2889, 9.9554]),
-  zoom: 16,
-})
 
-//For loading our saved polygons from DB
-// let GeojsonLayer
+//Setting up view (zoom level and coordinates)
+let view = new View;
 
 //Adding our Layers to the Map
 const map = new Map({
@@ -93,7 +82,10 @@ const map = new Map({
   view: view
 });
 
-//DRAW FUNCTIONALITIES
+
+
+/////////////////////////////////////////////// DRAW FUNCTIONALITIES
+
 //Vector Source that will contain the features
 let drawSource = new VectorSource();
 
@@ -144,6 +136,30 @@ document.getElementById('disable-draw').addEventListener('click', function(){
 });
 
 
+
+
+
+
+// Once everything is setup
+// request flask to send initial configurations (baseview, )
+socket.emit('init'); 
+
+////////////////////////////////////////////////////// Functions
+
+// initialize map
+
+function initializeMap(data){
+  
+  // Convert the latitude and longitude to the map's projection (assuming EPSG:3857)
+  let newCenter = fromLonLat([data.longitude, data.latitude]);
+  
+  // Set the new center and zoom level
+  view.setCenter(newCenter);
+  view.setZoom(data.zoom);
+}
+
+
+
 // Update the map with new points
 function updateMap(data) {
   // Clear previous features
@@ -169,6 +185,7 @@ function updateMap(data) {
         scale: 0.06,
       }),
     });
+
     if (item.status == "Online"){
       iconFeature.setStyle(iconStyleOnline);
     }
@@ -176,7 +193,9 @@ function updateMap(data) {
       iconFeature.setStyle(iconStyleOffline);
     }
     
-    MarkerSource.addFeature(iconFeature);
+    //here it will be updated to markerlayer
+    MarkerSource.addFeature(iconFeature); 
+
   });
 }
 
