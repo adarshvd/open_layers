@@ -54,3 +54,14 @@
     z-index: 1000;
     transform-origin: center;
 }
+
+
+.popup {
+    position: absolute;
+    background: white;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 3px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    pointer-events: none; /* Prevent mouse events */
+  }

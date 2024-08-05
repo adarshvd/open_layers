@@ -13,7 +13,7 @@ import Point from 'ol/geom/Point.js';
 import {Icon, Style} from 'ol/style.js';
 import io from 'socket.io-client';
 
-
+//////////////////////////////////////////////////////
 ////////////////////////////////////////////////////// socket
 // Setting up socket
 const socket = io('http://127.0.0.1:5000');
@@ -39,7 +39,7 @@ socket.on('update', (data) => {
 });
 
 
-
+//////////////////////////////////////////////////////
 ////////////////////////////////////////////////////// map
 
 //SETTING UP OUR LAYERS
@@ -82,8 +82,50 @@ const map = new Map({
   view: view
 });
 
+// Handle clicks on the map to show the feature name
+map.on('singleclick', function (evt) {
+  map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+    const name = feature.get('name');
+    if (name) {
+      console.log(`Clicked on feature: ${name}`);
+
+      // Remove any existing popups
+      const existingPopup = document.getElementById('popup');
+      if (existingPopup) {
+        existingPopup.parentNode.removeChild(existingPopup);
+      }
+
+      // Create a new popup
+      const popup = document.createElement('div');
+      popup.id = 'popup';
+      popup.className = 'popup';
+      popup.innerText = name;
+
+      // Position the popup
+      const coordinate = evt.coordinate;
+      const pixel = map.getPixelFromCoordinate(coordinate);
+      popup.style.left = pixel[0] + 'px';
+      popup.style.top = pixel[1] + 'px';
+
+      // Add the popup to the map container
+      document.getElementById('map-container').appendChild(popup);
+
+      // Remove the popup after 1 second
+      setTimeout(() => {
+        const existingPopup = document.getElementById('popup');
+        if (existingPopup) {
+          existingPopup.parentNode.removeChild(existingPopup);
+        }
+      }, 1000);
+
+      // alert(`Clicked on feature: ${name}`); // Display the name in an alert or create a popup
+    }
+  });
+});
 
 
+
+//////////////////////////////////////////////////////
 /////////////////////////////////////////////// DRAW FUNCTIONALITIES
 
 //Vector Source that will contain the features
@@ -144,6 +186,8 @@ document.getElementById('disable-draw').addEventListener('click', function(){
 // request flask to send initial configurations (baseview, )
 socket.emit('init'); 
 
+
+//////////////////////////////////////////////////////
 ////////////////////////////////////////////////////// Functions
 
 // initialize map
@@ -192,27 +236,12 @@ function updateMap(data) {
     else{
       iconFeature.setStyle(iconStyleOffline);
     }
-    
+
+
+
     //here it will be updated to markerlayer
     MarkerSource.addFeature(iconFeature); 
 
   });
 }
-
-
-//COMPASS
-// function updateCompassRotation() {
-//   var rotation = view.getRotation(); // Get rotation in radians
-//   compass.style.transform = `rotate(${rotation}rad)`; // Apply rotation to compass icon
-// }
-
-// // Update compass rotation on view change
-// view.on('change:rotation', updateCompassRotation);
-// // Initial update
-// updateCompassRotation();
-
-// // Handle compass click to reset rotation
-// compass.addEventListener('click', function() {
-//   view.setRotation(0); // Reset rotation to 0 radians
-// });
 
