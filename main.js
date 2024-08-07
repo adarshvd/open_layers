@@ -13,6 +13,8 @@ import Point from 'ol/geom/Point.js';
 import {Icon, Style} from 'ol/style.js';
 import io from 'socket.io-client';
 
+let device_types;
+
 //////////////////////////////////////////////////////
 ////////////////////////////////////////////////////// socket
 // Setting up socket
@@ -26,9 +28,11 @@ socket.on('connect', () => {
 
 
 // Handle 'initialize' events from Flask
-socket.on('initialize', (baseview) => {
-  console.log('Received Initialize', baseview)
-  initializeMap(baseview);
+socket.on('initialize', (data) => {
+  console.log('Received Initialize', data.baseview)
+  console.log('Received Initialize', data.devices_types)
+  device_types = data.devices_types;
+  initializeMap(data.baseview);
 });
 
 
@@ -82,46 +86,150 @@ const map = new Map({
   view: view
 });
 
-// Handle clicks on the map to show the feature name
-map.on('singleclick', function (evt) {
-  map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-    const name = feature.get('name');
-    if (name) {
-      console.log(`Clicked on feature: ${name}`);
 
-      // Remove any existing popups
-      const existingPopup = document.getElementById('popup');
-      if (existingPopup) {
-        existingPopup.parentNode.removeChild(existingPopup);
-      }
+// Left Click logic on map
+map.on('click', function (evt) {
+  if (evt.originalEvent.which === 1){ //left click
+    customMenu.style.display = 'none';
 
-      // Create a new popup
-      const popup = document.createElement('div');
-      popup.id = 'popup';
-      popup.className = 'popup';
-      popup.innerText = name;
+    console.log('Left clicked on map at:', evt.coordinate);
 
-      // Position the popup
-      const coordinate = evt.coordinate;
-      const pixel = map.getPixelFromCoordinate(coordinate);
-      popup.style.left = pixel[0] + 'px';
-      popup.style.top = pixel[1] + 'px';
-
-      // Add the popup to the map container
-      document.getElementById('map-container').appendChild(popup);
-
-      // Remove the popup after 1 second
-      setTimeout(() => {
+    map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+      const name = feature.get('name');
+      if (name) {
+        console.log(`Left Clicked on feature: ${name}`);
+  
+        // Remove any existing popups
         const existingPopup = document.getElementById('popup');
         if (existingPopup) {
           existingPopup.parentNode.removeChild(existingPopup);
         }
-      }, 1000);
-
-      // alert(`Clicked on feature: ${name}`); // Display the name in an alert or create a popup
-    }
-  });
+  
+        // Create a new popup
+        const popup = document.createElement('div');
+        popup.id = 'popup';
+        popup.className = 'popup';
+        popup.innerText = name;
+  
+        // Position the popup
+        const coordinate = evt.coordinate;
+        const pixel = map.getPixelFromCoordinate(coordinate);
+        popup.style.left = pixel[0] + 'px';
+        popup.style.top = pixel[1] + 'px';
+  
+        // Add the popup to the map container
+        document.getElementById('map-container').appendChild(popup);
+  
+        // Remove the popup after 1 second
+        setTimeout(() => {
+          const existingPopup = document.getElementById('popup');
+          if (existingPopup) {
+            existingPopup.parentNode.removeChild(existingPopup);
+          }
+        }, 1000);
+  
+        // alert(`Clicked on feature: ${name}`); // Display the name in an alert or create a popup
+      }
+    });
+  }
+  else{
+    console.log(evt.originalEvent.which);
+  }
+  
 });
+
+
+
+// Right click logic on map
+map.on('contextmenu', (evt) => {
+  if (evt.originalEvent.button === 2) {
+    evt.preventDefault(); // Prevent default context menu
+
+    console.log('Right clicked on map at:', evt.coordinate);
+
+    map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+      const name = feature.get('name');
+      const type = feature.get('type');
+      console.log(typeof(name)); // Should be "string"
+    
+      if (name) {
+        console.log(`Right Clicked on feature: ${name}`);
+    
+        // Get the coordinates of the click
+        const coordinates = evt.coordinate;
+    
+        // Clear existing options (optional)
+        customMenu.innerHTML = ''; // Removes all child elements (previous options)
+    
+        // Access dictionary value using name as key (if it exists)
+        const deviceOptions = device_types[type]; // deviceOptions will be the value associated with the name key
+    
+        // Check if deviceOptions exists before iterating
+        if (deviceOptions) {
+          for (const type of deviceOptions) {
+            const option = document.createElement('div');
+            option.textContent = type;
+            option.addEventListener('click', () => {
+              console.log(`Selected option: ${type}`);
+              customMenu.style.display = 'none'; // Hide the menu after option selection
+            });
+            customMenu.appendChild(option);
+          }
+        } else {
+          console.log(`No options found for device: ${name}`); // Optional: Handle missing device type
+        }
+    
+        // Position the custom menu
+        customMenu.style.left = evt.pixel[0] + 'px';
+        customMenu.style.top = evt.pixel[1] + 'px';
+        customMenu.style.display = 'block';
+      }
+    });
+    
+  }
+});
+
+
+
+
+// Create the custom menu HTML element
+const customMenu = document.createElement('div');
+customMenu.id = 'customContextMenu';
+customMenu.style.display = 'none';
+customMenu.style.position = 'absolute';
+customMenu.style.backgroundColor = 'white';
+customMenu.style.border = '1px solid black';
+customMenu.style.padding = '5px';
+
+// Add options to the menu
+const optionA = document.createElement('div');
+optionA.textContent = 'Option A';
+optionA.addEventListener('click', () => {
+  console.log('Option A pressed');
+  customMenu.style.display = 'none'; // Hide the menu after option selection
+});
+
+const optionB = document.createElement('div');
+optionB.textContent = 'Option B';
+optionB.addEventListener('click', () => {
+  console.log('Option B pressed');
+  customMenu.style.display = 'none'; // Hide the menu after option selection
+});
+
+customMenu.appendChild(optionA);
+customMenu.appendChild(optionB);
+
+document.body.appendChild(customMenu);
+
+//middle click
+document.addEventListener('mousedown', (evt) => {
+  if (evt.which === 2) {
+    console.log('Middle clicked on map at:', evt.coordinate); //not working
+    // Perform your desired action here
+  }
+});
+
+
 
 
 
@@ -214,6 +322,7 @@ function updateMap(data) {
     const iconFeature = new Feature({
       geometry: new Point(fromLonLat([item.longitude, item.latitude])),
       name: item.name,
+      type: item.type,
     });
 
     const iconStyleOnline = new Style({
