@@ -171,6 +171,12 @@ map.on('contextmenu', (evt) => {
             option.textContent = type;
             option.addEventListener('click', () => {
               console.log(`Selected option: ${type}`);
+              // Emit a socket.io event with clicked feature details
+              socket.emit('feature-right-clicked', {
+                name: name,
+                type: type,
+                // coordinates: coordinates,//not needed
+              });
               customMenu.style.display = 'none'; // Hide the menu after option selection
             });
             customMenu.appendChild(option);
@@ -345,8 +351,6 @@ function updateMap(data) {
     else{
       iconFeature.setStyle(iconStyleOffline);
     }
-
-
 
     //here it will be updated to markerlayer
     MarkerSource.addFeature(iconFeature); 
