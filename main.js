@@ -38,7 +38,7 @@ socket.on('initialize', (data) => {
 
 // Handle 'update' events from Flask
 socket.on('update', (data) => {
-  console.log('Received update:', data);
+  // console.log('Received update:', data);
   updateMap(data);
 });
 
@@ -148,6 +148,7 @@ map.on('contextmenu', (evt) => {
     console.log('Right clicked on map at:', evt.coordinate);
 
     map.forEachFeatureAtPixel(evt.pixel, function (feature) {
+      const id = feature.get('id');
       const name = feature.get('name');
       const type = feature.get('type');
       console.log(typeof(name)); // Should be "string"
@@ -166,15 +167,16 @@ map.on('contextmenu', (evt) => {
     
         // Check if deviceOptions exists before iterating
         if (deviceOptions) {
-          for (const type of deviceOptions) {
+          for (const choice of deviceOptions) {
             const option = document.createElement('div');
-            option.textContent = type;
+            option.textContent = choice;
             option.addEventListener('click', () => {
-              console.log(`Selected option: ${type}`);
+              console.log(`Selected option: ${choice}`);
               // Emit a socket.io event with clicked feature details
               socket.emit('feature-right-clicked', {
+                id: id,
                 name: name,
-                type: type,
+                choice: choice,
                 // coordinates: coordinates,//not needed
               });
               customMenu.style.display = 'none'; // Hide the menu after option selection
@@ -327,33 +329,29 @@ function updateMap(data) {
   data.forEach(item => {
     const iconFeature = new Feature({
       geometry: new Point(fromLonLat([item.longitude, item.latitude])),
+      id: item.id,
       name: item.name,
+      status: item.status,
       type: item.type,
     });
+    
+  const iconStatus = item.status;
+  const iconType = item.type;
 
-    const iconStyleOnline = new Style({
-      image: new Icon({
-        src: '/src/greencam.png',
-        scale: 0.06,
-      }),
-    });
+  // Construct the image source dynamically
+  const iconSrc = `/src/${iconType}${iconStatus}.png`;
 
-    const iconStyleOffline = new Style({
-      image: new Icon({
-        src: '/src/bluecam.png',
-        scale: 0.06,
-      }),
-    });
+  const iconStyle = new Style({
+    image: new Icon({
+      src: iconSrc,
+      scale: 0.06,
+    }),
+  });
 
-    if (item.status == "Online"){
-      iconFeature.setStyle(iconStyleOnline);
-    }
-    else{
-      iconFeature.setStyle(iconStyleOffline);
-    }
+  iconFeature.setStyle(iconStyle);
 
-    //here it will be updated to markerlayer
-    MarkerSource.addFeature(iconFeature); 
+  //here it will be updated to markerlayer
+  MarkerSource.addFeature(iconFeature); 
 
   });
 }
