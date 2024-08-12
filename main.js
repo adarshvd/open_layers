@@ -95,9 +95,9 @@ map.on('click', function (evt) {
     console.log('Left clicked on map at:', evt.coordinate);
 
     map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-      const name = feature.get('name');
-      if (name) {
-        console.log(`Left Clicked on feature: ${name}`);
+      const dev_name = feature.get('dev_name');
+      if (dev_name) {
+        console.log(`Left Clicked on feature: ${dev_name}`);
   
         // Remove any existing popups
         const existingPopup = document.getElementById('popup');
@@ -109,7 +109,7 @@ map.on('click', function (evt) {
         const popup = document.createElement('div');
         popup.id = 'popup';
         popup.className = 'popup';
-        popup.innerText = name;
+        popup.innerText = dev_name;
   
         // Position the popup
         const coordinate = evt.coordinate;
@@ -148,13 +148,13 @@ map.on('contextmenu', (evt) => {
     console.log('Right clicked on map at:', evt.coordinate);
 
     map.forEachFeatureAtPixel(evt.pixel, function (feature) {
-      const id = feature.get('id');
-      const name = feature.get('name');
-      const type = feature.get('type');
-      console.log(typeof(name)); // Should be "string"
+      const dev_id = feature.get('dev_id');
+      const dev_name = feature.get('dev_name');
+      const dev_type = feature.get('dev_type');
+      console.log(typeof(dev_name)); // Should be "string"
     
-      if (name) {
-        console.log(`Right Clicked on feature: ${name}`);
+      if (dev_name) {
+        console.log(`Right Clicked on feature: ${dev_name}`);
     
         // Get the coordinates of the click
         const coordinates = evt.coordinate;
@@ -162,8 +162,8 @@ map.on('contextmenu', (evt) => {
         // Clear existing options (optional)
         customMenu.innerHTML = ''; // Removes all child elements (previous options)
     
-        // Access dictionary value using name as key (if it exists)
-        const deviceOptions = device_types[type]; // deviceOptions will be the value associated with the name key
+        // Access dictionary value using name dev_as key (if it exists)
+        const deviceOptions = device_types[dev_type]; // deviceOptions will be the value associated with the name key
     
         // Check if deviceOptions exists before iterating
         if (deviceOptions) {
@@ -174,8 +174,9 @@ map.on('contextmenu', (evt) => {
               console.log(`Selected option: ${choice}`);
               // Emit a socket.io event with clicked feature details
               socket.emit('feature-right-clicked', {
-                id: id,
-                name: name,
+                dev_id: dev_id,
+                dev_type: dev_type,
+                dev_name: dev_name,
                 choice: choice,
                 // coordinates: coordinates,//not needed
               });
@@ -184,7 +185,7 @@ map.on('contextmenu', (evt) => {
             customMenu.appendChild(option);
           }
         } else {
-          console.log(`No options found for device: ${name}`); // Optional: Handle missing device type
+          console.log(`No options found for device: ${dev_name}`); // Optional: Handle missing device type
         }
     
         // Position the custom menu
@@ -328,15 +329,15 @@ function updateMap(data) {
   // Iterate over the data and create new features
   data.forEach(item => {
     const iconFeature = new Feature({
-      geometry: new Point(fromLonLat([item.longitude, item.latitude])),
-      id: item.id,
-      name: item.name,
-      status: item.status,
-      type: item.type,
+      geometry: new Point(fromLonLat([item.dev_longitude, item.dev_latitude])),
+      dev_id: item.dev_id,
+      dev_name: item.dev_name,
+      dev_status: item.dev_status,
+      dev_type: item.dev_type,
     });
     
-  const iconStatus = item.status;
-  const iconType = item.type;
+  const iconStatus = item.dev_status;
+  const iconType = item.dev_type;
 
   // Construct the image source dynamically
   const iconSrc = `/src/${iconType}${iconStatus}.png`;
