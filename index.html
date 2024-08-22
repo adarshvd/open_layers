@@ -1,32 +1,67 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>OpenLayers</title>
-    <style>
-      @import "node_modules/ol/ol.css";
-    </style>
-    <link rel="stylesheet" href="./styles.css"/>
-    
-  </head>
-  <body>
-    
-    <div id="map-ui">
-      <div id="compass"></div>
-      <div id="map-container"></div>
-    </div>
-
-    <div class="controls">
-      <button id="load-geojson">Load GeoJSON</button>
-      <button id="draw-polygon">Draw Polygon</button>
-      <button id="draw-point">Draw Point</button>
-      <button id="disable-draw">Disable Draw</button>
-      <button id="save-geojson">Save as GeoJSON</button>
-      <button id="print">Print</button>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+      body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center; /* Center vertically */
+      justify-content: center; /* Center horizontally */
+      height: 100vh; /* Full viewport height */
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+    .login-container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+      text-align: center;
+    }
+    .login-container input {
+      margin-bottom: 10px;
+      padding: 10px;
+      width: 80%;
+    }
+    .login-container button {
+      padding: 10px 20px;
+      border: none;
+      background-color: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+    .login-container button:hover {
+      background-color: #0056b3;
+    }
+    .error-message {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+    <div id="error" class="error-message"></div>
   </div>
+  <script>
+    function login() {
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
 
-  
-    
-    <script src="./main.js" type="module"></script>
-  </body>
+      if (username === 'admin' && password === 'admin') {
+        window.location.href = 'home.html';
+      } else {
+        document.getElementById('error').textContent = 'Invalid username or password';
+      }
+    }
+  </script>
+</body>
 </html>
