@@ -177,6 +177,8 @@ map.on('contextmenu', (evt) => {
       const dev_id = feature.get('dev_id');
       const dev_name = feature.get('dev_name');
       const dev_type = feature.get('dev_type');
+      const dev_status = feature.get('dev_status');
+      const dev_rtsp = feature.get('dev_rtsp');
       console.log(typeof(dev_name)); // Should be "string"
     
       if (dev_name) {
@@ -201,8 +203,10 @@ map.on('contextmenu', (evt) => {
               // Emit a socket.io event with clicked feature details
               socket.emit('feature-right-clicked', {
                 dev_id: dev_id,
-                dev_type: dev_type,
                 dev_name: dev_name,
+                dev_type: dev_type,
+                dev_status: dev_status,
+                dev_rtsp: dev_rtsp,
                 choice: choice,
                 // coordinates: coordinates,//not needed
               });
@@ -436,6 +440,7 @@ function updateMap(data) {
         dev_name: item.dev_name,
         dev_status: item.dev_status,
         dev_type: item.dev_type,
+        dev_rtsp: item.dev_rtsp,
       });
       
     const iconStatus = item.dev_status;
